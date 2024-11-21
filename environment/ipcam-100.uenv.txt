@@ -1,0 +1,14 @@
+gpio_white=81o
+gpio_motor_h=49 40 48 47
+gpio_motor_v=60 39 38 41
+motor_maxstep_h=3120
+motor_maxstep_v=1140
+gpio_button=50
+gpio_default=81O
+disable_eth=false
+disable_sd=false
+gpio_speaker=63o
+enable_updates=true
+wlandev=8188fu
+gpio_wlan=82O
+gpio_mmc_cd=52
