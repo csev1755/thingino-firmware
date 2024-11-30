@@ -15,13 +15,13 @@ which motors > /dev/null && has_motors="true"
 <label class="btn btn-dark border mb-2" for="motionguard" title="Motion Guard"><img src="/a/motion.svg" alt="Motion Guard" class="img-fluid"></label>
 
 <input type="checkbox" class="btn-check" name="r180" id="r180" value="1">
-<label class="btn btn-dark border mb-2" for="r180" title="Rotate 180°"><img src="/a/r180.svg" alt="Rotate 180°" class="img-fluid"></label>
+<label class="btn btn-dark border mb-2" for="r180" title="Rotate 180°"><img src="/a/rotate.svg" alt="Rotate 180°" class="img-fluid"></label>
 
 <input type="checkbox" class="btn-check" name="daynight" id="daynight" value="1">
-<label class="btn btn-dark border mb-2" for="daynight" title="Night mode"><img src="/a/day_night_mode.svg" alt="Day/Night Mode" class="img-fluid"></label>
+<label class="btn btn-dark border mb-2" for="daynight" title="Night mode"><img src="/a/night.svg" alt="Day/Night Mode" class="img-fluid"></label>
 
 <input type="checkbox" class="btn-check" name="color" id="color" value="1">
-<label class="btn btn-dark border mb-2" for="color" title="Color mode"><img src="/a/color_mode.svg" alt="Color mode" class="img-fluid"></label>
+<label class="btn btn-dark border mb-2" for="color" title="Color mode"><img src="/a/color.svg" alt="Color mode" class="img-fluid"></label>
 
 <% if get gpio_ircut >/dev/null; then %>
 <input type="checkbox" class="btn-check" name="ircut" id="ircut" value="1">
@@ -60,7 +60,7 @@ Use a single click for precise positioning, double click for coarse, larger dist
 <% fi %>
 
 <div class="alert alert-secondary">
-<p class="mb-0"><img src="/a/volume-mute.svg" alt="Icon: No Audio" class="float-start me-2" style="height:1.75rem" title="No Audio">
+<p class="mb-0"><img src="/a/mute.svg" alt="Icon: No Audio" class="float-start me-2" style="height:1.75rem" title="No Audio">
 Please note, there is no audio on this page. Open the RTSP stream in a player to hear audio.</p>
 <b id="playrtsp" class="cb"></b>
 </div>
@@ -106,6 +106,7 @@ for i in email ftp mqtt telegram webhook yadisk; do
 	let a = document.createElement('a')
 	a.href = 'plugin-send2<%= $i %>.cgi'
 	a.classList.add('btn','btn-outline-danger','mb-2')
+	a.title = 'Configure sent2<%= $i%> plugin'
 	a.append($('button[data-sendto=<%= $i %>] img'))
 	$('button[data-sendto=<%= $i %>]').replaceWith(a);
 }
@@ -115,7 +116,7 @@ $$("button[data-sendto]").forEach(el => {
 	el.onclick = (ev) => {
 		ev.preventDefault();
 		if (!confirm("Are you sure?")) return false;
-		fetch("/x/send.cgi?" + new URLSearchParams({'to': ev.target.dataset["sendto"]}).toString())
+		fetch("/x/send.cgi?" + new URLSearchParams({'to': el.dataset.sendto}).toString())
 		.then(res => res.json())
 		.then(data => console.log(data))
 	}

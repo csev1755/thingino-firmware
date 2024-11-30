@@ -64,34 +64,36 @@ default_for rtsp_password "thingino"
 
 <div class="row row-cols-1 row-cols-lg-2">
 <div class="col mb-3">
-<div id="preview-wrapper" class="mb-4 position-relative">
-
+<div id="preview-wrapper" class="position-relative">
 <div class="mb-2">
-<label class="form-label me-2">Preview is</label>
-<div class="form-check form-check-inline">
-<input class="form-check-input" type="radio" name="stream2_jpeg_channel" id="stream2_jpeg_channel_0" value="0">
-<label class="form-check-label" for="stream2_jpeg_channel_0">Main stream</label>
+
+<div class="btn-toolbar" role="toolbar">
+<div class="btn-group" role="group">
+<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#mdPreview"
+ title="Full-screen"><img src="/a/zoom.svg" alt="Zoom" class="img-fluid" style="height:1.5rem"></button>
 </div>
-<div class="form-check form-check-inline">
-<input class="form-check-input" type="radio" name="stream2_jpeg_channel" id="stream2_jpeg_channel_1" value="1">
-<label class="form-check-label" for="stream2_jpeg_channel_1">Substream</label>
+
+<div class="btn-group" role="group">
+<input type="radio" class="btn-check" name="stream2_jpeg_channel" id="stream2_jpeg_channel_0" value="0" checked>
+<label class="btn btn-outline-primary" for="stream2_jpeg_channel_0">Main stream</label>
+<input type="radio" class="btn-check" name="stream2_jpeg_channel" id="stream2_jpeg_channel_1" value="1">
+<label class="btn btn-outline-primary" for="stream2_jpeg_channel_1">Substream</label>
 </div>
 </div>
 
+</div>
 <p><img id="preview" src="/a/nostream.webp" class="img-fluid" alt="Image: Stream Preview"></p>
-<button type="button" class="btn btn-primary btn-large position-absolute top-50 start-50 translate-middle"
- data-bs-toggle="modal" data-bs-target="#mdPreview"><img src="/a/zoom.svg" alt="Image: Zoom"></button>
 </div>
-
-<p>Double-click on a range element will restore its default value.</p>
-<button type="button" class="btn btn-secondary me-1" id="restart-prudynt">Restart streamer</button>
-<button type="button" class="btn btn-secondary me-1" id="save-prudynt-config">Save config</button>
+<div class="d-flex flex-wrap align-content-around gap-1">
+<button type="button" class="btn btn-secondary" id="restart-prudynt">Restart streamer</button>
+<button type="button" class="btn btn-secondary" id="save-prudynt-config">Save config</button>
 <a class="btn btn-secondary" href="tool-file-manager.cgi?dl=/etc/prudynt.cfg">Download config</a>
 </div>
-
+</div>
 <div class="col mb-3">
-<div class="tab-content" id="streamer-tabs">
+<p class="small">Double-click on a range element will restore its default value.</p>
 
+<div class="tab-content" id="streamer-tabs">
 <div class="tab-pane fade show active" id="tab1-pane" role="tabpanel" aria-labelledby="tab1">
 <div class="mb-2 select" id="image_core_wb_mode_wrap">
 <label for="image_core_wb_mode" class="form-label">White balance mode</label>
@@ -135,10 +137,13 @@ default_for rtsp_password "thingino"
 <div class="col"><% field_text "${domain}_profile" "Profile" %></div>
 </div>
 <div class="row g-2">
-<div class="col-9"><% field_text "${domain}_rtsp_endpoint" "Endpoint" "rtsp://$rtsp_username:$rtsp_password@$network_address/ch$i" %></div>
+<div class="col-9"><% field_text "${domain}_rtsp_endpoint" "Endpoint" %></div>
 <div class="col-3"><% field_text "${domain}_rotation" "Rotation" %></div>
 </div>
 <% field_switch "${domain}_audio_enabled" "Audio in the stream" %>
+<div class="alert alert-dark">RTSP stream URL:
+<div class="cb">rtsp://<%= $rtsp_username %>:<%= $rtsp_password %>@<%= $network_address %>/ch<%= $i %></div>
+</div>
 </div>
 
 <div class="tab-pane fade" id="tab<%= $((i+2)) %>osd-pane" role="tabpanel" aria-labelledby="tab<%= $((i+2)) %>osd">
@@ -158,7 +163,7 @@ default_for rtsp_password "thingino"
 <div class="row g-1">
 <div class="col col-4"><% field_color "fontcolor${i}" "Text color" %></div>
 <div class="col col-4"><% field_color "fontstrokecolor${i}" "Shadow color" %></div>
-<div class="col col-4"><% field_range "fontstrokesize${i}" "Shadow size" "0,100,1" %></div>
+<div class="col col-4"><% field_range "fontstrokesize${i}" "Shadow size" "0,5,1" %></div>
 </div>
 <div class="row g-1">
 <div class="col col-4"><% field_text "osd${i}_time_format" "Time format" "$STR_SUPPORTS_STRFTIME" %></div>
@@ -213,7 +218,9 @@ default_for rtsp_password "thingino"
 </div>
 </div>
 
-</div></div></div>
+</div>
+</div>
+</div>
 
 <div class="modal fade" id="mdFont" tabindex="-1" aria-labelledby="mdlFont" aria-hidden="true">
 <div class="modal-dialog"><div class="modal-content"><div class="modal-header">
