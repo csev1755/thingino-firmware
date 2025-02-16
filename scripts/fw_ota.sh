@@ -6,19 +6,36 @@ SSH_OPTS="-o ConnectTimeout=10 -o ServerAliveInterval=2 -o ControlMaster=auto -o
 # Cleanup function to close SSH master connection
 cleanup() {
 	ssh -O exit $SSH_OPTS root@"$CAMERA_IP_ADDRESS" 2>/dev/null
-	echo "SSH connection closed."
 }
 
 # Trap to execute cleanup function on script exit
 trap cleanup EXIT
 
-# Validates input parameters and sets up SSH connection sharing, single authentication request
-initialize_ssh_connection() {
-	if [ "$#" -ne 2 ]; then
-		echo "Usage: $0 FIRMWARE_FILE IP_ADDRESS"
+# Downloads and installs the sysupgrade script
+install_sysupgrade() {
+	local TEMP_FILE=$(mktemp /tmp/sysupgrade.XXXXXX)
+
+	echo "Downloading latest sysupgrade utility..."
+	if ! curl -o "$TEMP_FILE" --connect-timeout 5 --max-time 30 \
+	    https://raw.githubusercontent.com/themactep/thingino-firmware/refs/heads/master/package/thingino-sysupgrade/files/sysupgrade; then
+		echo "Failed to download sysupgrade utility"
+		rm -f "$TEMP_FILE"
 		exit 1
 	fi
 
+	echo "Transferring sysupgrade utility to device..."
+	if ssh $SSH_OPTS root@"$CAMERA_IP_ADDRESS" "cat > /usr/sbin/sysupgrade && chmod +x /usr/sbin/sysupgrade" < "$TEMP_FILE"; then
+		echo "Sysupgrade utility installed successfully."
+		rm -f "$TEMP_FILE"
+	else
+		echo "Failed to install sysupgrade utility"
+		rm -f "$TEMP_FILE"
+		exit 1
+	fi
+}
+
+# Validates input parameters and sets up SSH connection sharing, single authentication request
+initialize_ssh_connection() {
 	FIRMWARE_BIN="$1"
 	CAMERA_IP_ADDRESS="$2"
 
@@ -61,8 +78,15 @@ flash_firmware() {
 
 main() {
 	initialize_ssh_connection "$@"
+	install_sysupgrade
 	transfer_and_verify_firmware
 	flash_firmware
 }
 
-main "$@"
+
+if [ "$#" -ne 2 ]; then
+	echo "Usage: $0 FIRMWARE_FILE IP_ADDRESS"
+	exit 1
+else
+	main "$@"
+fi

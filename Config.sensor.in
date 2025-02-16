@@ -159,6 +159,8 @@ config BR2_SENSOR_OV9750
 	bool "OmniVision OV9750"
 config BR2_SENSOR_PS5258
 	bool "PS5258"
+config BR2_SENSOR_PS5250
+	bool "PS5250"
 config BR2_SENSOR_PS5260
 	bool "PS5260"
 config BR2_SENSOR_PS5268
@@ -207,6 +209,8 @@ config BR2_SENSOR_SC2335
 	bool "SmartSens SC2335"
 config BR2_SENSOR_SC2336
 	bool "SmartSens SC2336"
+config BR2_SENSOR_SC2336P
+	bool "SmartSens SC2336p"
 config BR2_SENSOR_SC301IOT
 	bool "SmartSens SC301IoT"
 config BR2_SENSOR_SC3235

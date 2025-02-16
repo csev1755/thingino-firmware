@@ -1,13 +1,13 @@
 #!/bin/sh
 
-DAEMON_ARGS="-f -c /etc/crontabs"
+DAEMON_ARGS="-f -c /etc/cron/crontabs"
 
 . /etc/init.d/rc.common
 
 start() {
 	starting
 	[ -f $DAEMON_FULL ] || quit "Disabled"
-	start_daemon_with_pid
+	start_daemon
 }
 
 stop() {

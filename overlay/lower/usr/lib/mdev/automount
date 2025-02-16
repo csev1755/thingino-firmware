@@ -8,6 +8,7 @@ fi
 devicenode="/dev/$MDEV"
 mountpoint="/mnt/$MDEV"
 
+diag="$mountpoint/.diag"
 run="$mountpoint/run.sh"
 run_once="$mountpoint/runonce.sh"
 run_once_flag="${run_once/.sh/.done}"
@@ -68,12 +69,13 @@ do_mount() {
 		return 1
 	fi
 
+	[ -f "$diag" ] && do_run_diag
 	[ -f "$run_once" ] && do_run_once
 	[ -f "$run" ] && do_run_always
 }
 
 do_umount() {
-	stop_recording
+	lsof | awk '/\/mnt\/mmcblk0p1/{print $1}' | xargs kill -9
 
 	if grep -qs "^$devicenode " /proc/mounts; then
 		if umount "$mountpoint"; then
@@ -96,6 +98,18 @@ do_run_always() {
 	fi
 }
 
+do_run_diag() {
+	rm -f $mountpoint/.diag
+	thingino-diag -l $mountpoint
+	sync
+	do_umount
+	iac -f /usr/share/sounds/th-chime_1.pcm
+	sleep 0.5
+	iac -f /usr/share/sounds/th-chime_1.pcm
+	sleep 0.5
+	iac -f /usr/share/sounds/th-chime_1.pcm
+}
+
 do_run_once() {
 	if [ -f "$run_once_flag" ]; then
 		log "Stop flag $run_once_flag exists."
@@ -108,12 +122,6 @@ do_run_once() {
 	else
 		log "Failed to execute $run_once script."
 	fi
-}
-
-stop_recording() {
-	while pidof openRTSP > /dev/null; do
-		killall openRTSP
-	done
 }
 
 case "$ACTION" in

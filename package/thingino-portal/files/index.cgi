@@ -1,6 +1,7 @@
 #!/bin/haserl
 <%
-
+image_id=$(awk -F'=' '/IMAGE_ID/{print $2}' /etc/os-release)
+build_id=$(awk -F'=' '/BUILD_ID/{print $2}' /etc/os-release | tr -d '"')
 timestamp=$(date +%s)
 ttl_in_sec=600
 
@@ -40,6 +41,11 @@ post_request_to_save() {
 	post_request && [ "save" = "$POST_mode" ]
 }
 
+set_error() {
+	error_message="$1"
+	POST_mode="edit"
+}
+
 if post_request_expired; then
 	http_header="HTTP/1.1 303 See Other"
 	http_redirect="Location: $SCRIPT_NAME"
@@ -55,6 +61,9 @@ elif post_request; then
 	wlanap_ssid="$POST_wlanap_ssid"
 	wlanpass="$POST_wlanpass"
 	wlanssid="$POST_wlanssid"
+
+        badchars=$(echo "$hostname" | sed 's/[0-9A-Z\.-]//ig')
+	[ -z "$badchars" ] || set_error "Hostname cannot contain $badchars"
 
 	if post_request_to_save; then
 		http_header="HTTP/1.1 303 See Other"
@@ -96,7 +105,7 @@ Content-type: text/html; charset=UTF-8
 Cache-Control: no-store
 Pragma: no-cache
 Date: $(TZ=GMT0 date +"%a, %d %b %Y %T %Z" | tr -d '\n')
-Server: Tingino Portal
+Server: Thingino Portal
 $http_redirect
 "
 	[ -n "$http_redirect" ] && exit 0
@@ -123,6 +132,7 @@ h2 {font-size:1.3rem}
 <div class="container">
 <h1><img src="/a/logo.svg" alt="Thingino Logo" class="img-fluid"></h1>
 <h2>Initial Configuration</h2>
+<p class="alert alert-info"><%= $image_id %><br><%= $build_id %></p>
 </div>
 </header>
 <main>
@@ -148,6 +158,9 @@ to it using your password <b><%= $wlanap_pass %></b>, then open the web interfac
 <% elif get_request || post_request_to_edit; then %>
 
 <p class="alert alert-warning text-center">Your MAC address is <% from_env "wlanmac" %></p>
+<% if [ -n "$error_message" ]; then %>
+<p class="alert alert-danger"><%= $error_message %></p>
+<% fi %>
 <form action="<%= $SCRIPT_NAME %>" method="post" class="my-3 needs-validation" novalidate style="max-width:26rem">
 <div class="mb-2">
 <label class="form-label">Hostname</label>

@@ -1,7 +1,8 @@
 WIFI_ATBM6041_SITE_METHOD = git
 WIFI_ATBM6041_SITE = https://github.com/gtxaspec/atbm60xx
 WIFI_ATBM6041_SITE_BRANCH = master
-WIFI_ATBM6041_VERSION = $(shell git ls-remote $(WIFI_ATBM6041_SITE) $(WIFI_ATBM6041_SITE_BRANCH) | head -1 | cut -f1)
+WIFI_ATBM6041_VERSION = 933a3bc2b3e1100ae00831b82132f8ae200a324d
+# $(shell git ls-remote $(WIFI_ATBM6041_SITE) $(WIFI_ATBM6041_SITE_BRANCH) | head -1 | cut -f1)
 
 WIFI_ATBM6041_LICENSE = GPL-2.0
 
@@ -38,8 +39,8 @@ LINUX_CONFIG_LOCALVERSION = $(shell awk -F "=" '/^CONFIG_LOCALVERSION=/ {print $
 define WIFI_ATBM6041_INSTALL_CONFIGS
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/lib/modules/3.10.14$(LINUX_CONFIG_LOCALVERSION)
 	touch $(TARGET_DIR)/lib/modules/3.10.14$(LINUX_CONFIG_LOCALVERSION)/modules.builtin.modinfo
-	$(INSTALL) -m 755 -d $(TARGET_DIR)/usr/share/atbm60xx_conf
-	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/share/atbm60xx_conf $(WIFI_ATBM60XX_PKGDIR)/files/*.txt
+	$(INSTALL) -m 755 -d $(TARGET_DIR)/usr/share/wifi
+	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/share/wifi $(WIFI_ATBM60XX_PKGDIR)/files/*.txt
 endef
 WIFI_ATBM6041_POST_INSTALL_TARGET_HOOKS += WIFI_ATBM6041_INSTALL_CONFIGS
 

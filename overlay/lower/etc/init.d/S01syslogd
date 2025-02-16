@@ -1,12 +1,20 @@
 #!/bin/sh
 
-DAEMON_ARGS="-n -C64 -t"
+DAEMON_ARGS="-n -C64 -t -D $RSYSLOG_ADDRESS"
+
+RSYSLOG_IP=$(fw_printenv -n rsyslog_ip)
+RSYSLOG_PORT=$(fw_printenv -n rsyslog_port)
+if [ -n "$RSYSLOG_IP" ]; then
+	DAEMON_ARGS="$DAEMON_ARGS -R $RSYSLOG_IP"
+	[ -n "$RSYSLOG_PORT" ] && DAEMON_ARGS="$DAEMON_ARGS:$RSYSLOG_PORT"
+	[ "true" = "$(fw_printenv -n rsyslog_local)" ] && DAEMON_ARGS="$DAEMON_ARGS -L"
+fi
 
 . /etc/init.d/rc.common
 
 start() {
 	starting
-	start_daemon_with_pid
+	start_daemon
 }
 
 stop() {

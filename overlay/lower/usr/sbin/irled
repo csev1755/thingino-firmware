@@ -1,17 +1,19 @@
 #!/bin/sh
 
+die() { printf "\e[38;5;160m%s\e[0m\n" "$1" >&2; exit 1; }
+
 # set parameters from cli, if empty
 [ -z "$mode" ] && mode=$1
 [ -z "$type" ] && type=$2
 
 case "$type" in
 	ir850 | ir940 | white)
-		pin=$(get gpio_$type)
+		pin=$(fw_printenv -n gpio_$type)
 		;;
 	*)
 		# select first non-empty pin of available
 		for type in ir850 ir940 white; do
-			pin=$(get gpio_$type)
+			pin=$(fw_printenv -n gpio_$type)
 			[ -n "$pin" ] && break
 		done
 		# set most common type for error message below
@@ -19,50 +21,31 @@ case "$type" in
 		;;
 esac
 
-if [ -z "$pin" ]; then
-	echo -e "Please define LED GPIO pin\nfw_setenv gpio_$type <pin>" >&2
-	exit 1
-fi
+[ -z "$pin" ] && die "Please define LED GPIO pin\nfw_setenv gpio_$type <pin>"
 
 # default to output high
 [ "$pin" = "${pin//[^0-9]/}" ] && pin="${pin}O"
-
 case ${pin:(-1)} in
-	o)
-		pin_on=0
-		pin_off=1
-		;;
-	O | *)
-		pin_on=1
-		pin_off=0
-		;;
+	o) pin_on=0; pin_off=1 ;;
+	O) pin_on=1; pin_off=0 ;;
 esac
 pin=${pin:0:(-1)}
 
 case "$mode" in
 	0 | off)
-		echo "gpio set $pin $pin_off > /dev/null" >&2
-		gpio set $pin $pin_off > /dev/null
+		gpio set $pin $pin_off
 		;;
 	1 | on)
-		echo "gpio set $pin $pin_on > /dev/null" >&2
-		gpio set $pin $pin_on > /dev/null
+		gpio set $pin $pin_on
 		;;
 	~ | toggle)
-		echo "gpio toggle $pin > /dev/null" >&2
-		gpio toggle $pin > /dev/null
+		gpio toggle $pin
 		;;
-	status)
-		echo "gpio value $pin" >&2
-		gpio value $pin
-		;;
-	\? | read)
-		echo "gpio value $pin | tr -d '\n'" >&2
-		gpio value $pin | tr -d '\n'
+	\? | read | status)
+		[ "$(gpio value $pin | tr -d '\n')" = "$pin_on" ] && echo -n "1" || echo -n "0"
 		;;
 	*)
-		echo -e "Unknown mode" >&2
-		exit 3
+		die "Unknown mode"
 		;;
 esac
 

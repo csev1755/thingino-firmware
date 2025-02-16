@@ -1,7 +1,8 @@
 WIFI_ATBM6062U_SITE_METHOD = git
 WIFI_ATBM6062U_SITE = https://github.com/gtxaspec/atbm-wifi
 WIFI_ATBM6062U_SITE_BRANCH = atbm-606x
-WIFI_ATBM6062U_VERSION = $(shell git ls-remote $(WIFI_ATBM6062U_SITE) $(WIFI_ATBM6062U_SITE_BRANCH) | head -1 | cut -f1)
+WIFI_ATBM6062U_VERSION = 09e7f713e8c4c3e74a19568f4aada4398fad9181
+# $(shell git ls-remote $(WIFI_ATBM6062U_SITE) $(WIFI_ATBM6062U_SITE_BRANCH) | head -1 | cut -f1)
 
 WIFI_ATBM6062U_LICENSE = GPL-2.0
 
@@ -30,8 +31,8 @@ LINUX_CONFIG_LOCALVERSION = $(shell awk -F "=" '/^CONFIG_LOCALVERSION=/ {print $
 define WIFI_ATBM6062U_INSTALL_CONFIGS
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/lib/modules/3.10.14$(LINUX_CONFIG_LOCALVERSION)
 	touch $(TARGET_DIR)/lib/modules/3.10.14$(LINUX_CONFIG_LOCALVERSION)/modules.builtin.modinfo
-	$(INSTALL) -m 755 -d $(TARGET_DIR)/etc
-	$(INSTALL) -m 644 -t $(TARGET_DIR)/etc $(WIFI_ATBM_WIFI_PKGDIR)/files/*.txt
+	$(INSTALL) -m 755 -d $(TARGET_DIR)/usr/share/wifi
+	$(INSTALL) -m 644 -t $(TARGET_DIR)/usr/share/wifi $(WIFI_ATBM_WIFI_PKGDIR)/files/*.txt
 	$(INSTALL) -m 755 -d $(TARGET_DIR)/lib/firmware
 	$(INSTALL) -m 644 $(@D)/firmware/cronus_IPC_NOTXCONRIM_NoBLE_USB_svn19514_24M_wifi6phy_DCDC.bin $(TARGET_DIR)/lib/firmware/$(call qstrip,$(ATBM6062U_MODULE_NAME))_fw.bin
 endef

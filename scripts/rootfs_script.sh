@@ -3,12 +3,15 @@
 # get image id from the path to output
 IMAGE_ID=$(echo $BR2_CONFIG | awk -F '/' '{print $(NF-1)}')
 HOSTNAME=$(echo $IMAGE_ID | awk -F '_' '{print $1 "-" $2}')
+BOOTLOADER=$(echo $BR2_PACKAGE_THINGINO_UBOOT_BOARDNAME | tr -d '"')
 
 cd $BR2_EXTERNAL
 GIT_BRANCH=$(git branch | grep ^* | awk '{print $2}')
 GIT_HASH=$(git show -s --format=%H)
-GIT_TIME=$(git show -s --format=%ci)
-BUILD_ID="${GIT_BRANCH}+${GIT_HASH:0:7}, ${GIT_TIME}"
+GIT_TIME=$(TZ=UTC0 git show --quiet --date='format-local:%Y-%m-%d %H:%M:%S +0000' --format="%cd")
+BUILD_TIME="$(env -u SOURCE_DATE_EPOCH TZ=UTC date '+%Y-%m-%d %H:%M:%S %z')"
+BUILD_ID="${GIT_BRANCH}+${GIT_HASH:0:7}, ${BUILD_TIME}"
+COMMIT_ID="${GIT_BRANCH}+${GIT_HASH:0:7}, ${GIT_TIME}"
 cd -
 
 FILE=${TARGET_DIR}/usr/lib/os-release
@@ -31,21 +34,14 @@ sed 's/^/BUILDROOT_/' $FILE > $tmpfile
 	echo "ARCHITECTURE=mips"
 	echo "IMAGE_ID=${IMAGE_ID}"
 	echo "BUILD_ID=\"${BUILD_ID}\""
+	echo "BUILD_TIME=\"${BUILD_TIME}\""
+	echo "COMMIT_ID=\"${COMMIT_ID}\""
+	echo "BOOTLOADER=$BOOTLOADER"
 	echo "HOSTNAME=ing-${HOSTNAME}"
 	date +TIME_STAMP=%s
 	cat $tmpfile
 } > $FILE
 rm $tmpfile
-
-if grep -q ^U_BOOT_ENV_TXT $BR2_CONFIG; then
-	uenv=$(sed -rn "s/^U_BOOT_ENV_TXT=\"\\\$\(\w+\)(.+)\"/\1/p" $BR2_CONFIG)
-	if [ -f "${BR2_EXTERNAL}${uenv}" ]; then
-		cp -v ${BR2_EXTERNAL}${uenv} ${TARGET_DIR}/etc/uenv.txt
-	fi
-	if [ -f "${BR2_EXTERNAL}/local.uenv.txt" ]; then
-		grep --invert-match '^#' "${BR2_EXTERNAL}/local.uenv.txt" >> ${TARGET_DIR}/etc/uenv.txt
-	fi
-fi
 
 if [ -f "${TARGET_DIR}/lib/libconfig.so" ]; then
 	rm -vf ${TARGET_DIR}/lib/libconfig.so*

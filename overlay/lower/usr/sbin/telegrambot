@@ -1,21 +1,25 @@
-#!/bin/sh
+#!/bin/env sh
 
-plugin="telegrambot"
+die() { printf "\e[38;5;160m%s\e[0m\n" "$1" >&2; exit 1; }
 
-command -v jsonfilter > /dev/null || die "$plugin is not supported on this platform, missing jsonfilter."
+pidof -o %PPID $(basename $0) > /dev/null && die "is already running"
 
-. /sbin/common-plugins
-singleton
+command -v jsonfilter > /dev/null || die "Missing jsonfilter"
+
+CONFIG_FILE="/etc/webui/telegrambot.conf"
+[ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
+
+. /usr/share/common
+
+[ -z "$telegrambot_token" ] && die "Telegram Bot token is not set"
 
 is_debug_mode && echo_c 208 "Running in debug mode"
 
-[ "true" = "$telegrambot_enabled" ] || die "Telegram Bot is not enabled in $CONFIG_FILE."
-
 API_URL="https://api.telegram.org/bot$telegrambot_token"
 MSG_TIMEOUT=5
-JSDATA_FILE="/tmp/$plugin.json"
-OFFSET_TEMP="/tmp/$plugin.offset"
-OFFSET_STOR="/etc/webui/$plugin.offset"
+JSDATA_FILE="/tmp/telegrambot.json"
+OFFSET_TEMP="/tmp/telegrambot.offset"
+OFFSET_STOR="/etc/webui/telegrambot.offset"
 IFS_ORIG=$IFS
 
 bot_keyboard=""
@@ -177,8 +181,11 @@ while :; do
 
 		[ -z "$(json_data "$.result[@.update_id=$update_id].*.entities")" ] && continue
 		entities=$(json_data "$.result[@.update_id=$update_id].*.entities[*]")
+
 		IFS=$'\n'
+
 		for entity in $entities; do
+			sender=$(json_data "$.result[@.update_id=$update_id].*.from.username")
 			chat_id=$(json_data "$.result[@.update_id=$update_id].*.chat.id")
 			chat_type=$(json_data "$.result[@.update_id=$update_id].*.chat.type")
 			message_id=$(json_data "$.result[@.update_id=$update_id].*.message_id")
@@ -203,6 +210,12 @@ while :; do
 			# - text_mention” (for users without usernames)
 			# - custom_emoji (for inline custom emoji stickers)
 
+			# check sender against whitelist
+			if ! echo "$telegrambot_users" | grep -qw "$sender"; then
+				echo "You are not my daddy, @$sender!"
+				continue
+			fi
+
 			if [ "bot_command" = "$(jsonfilter -s "$entity" -e "$.type")" ]; then
 				bot_command="${message_text:$(jsonfilter -s "$entity" -e "$.offset"):$(jsonfilter -s "$entity" -e "$.length")}"
 
@@ -224,11 +237,11 @@ while :; do
 
 		if [ -n "$bot_command" ]; then
 			[ "reboot" = "$bot_command" ] && save_offset
-			message="Command $bot_command not found."
 			for i in $(seq 0 9); do
 				[ "/$(eval echo \$telegrambot_command_$i)" = "$bot_command" ] || continue
 				script="$(eval echo \$telegrambot_script_$i | sed "s/\$chat_id/$chat_id/")"
-				message="$($script || echo -e "Execution failed! Please review the command:\n$script")"
+				message=$(eval $script)
+				[ $? -eq 0 ] || message="Execution failed! Please review the command:\n$script\n\nOutput:\n$result"
 				break
 			done
 			[ -n "$message" ] && send_message "$chat_id" "${message//\"/\\\"}" "$message_id"
@@ -236,4 +249,4 @@ while :; do
 	done
 done
 
-quit_clean 0
+exit 0

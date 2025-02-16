@@ -1,0 +1,50 @@
+#!/bin/sh
+
+. /etc/init.d/rc.common
+
+VALID_STATES="high low input"
+
+# TODO: Set the maximum GPIO number by SOC model
+MAX_GPIO=192
+
+start() {
+	while IFS= read -r line; do
+		# Skip empty lines and comments
+		[ -z "$line" ] || echo "$line" | grep -q '^#' && continue
+
+		# Extract fields and validate
+		set -- $line
+		gpionum=$1
+		state=$(echo "$2" | tr A-Z a-z)
+		case "$VALID_STATES" in
+			*"$state"*) : ;;
+			*) info "Invalid state: $state in line: $line"; return 1 ;;
+		esac
+
+		# pin is in valid range
+		if [ "$gpionum" -lt 0 ] || [ "$gpionum" -gt $MAX_GPIO ]; then
+			info "Invalid GPIO number: $gpionum in line: $line"
+			return 1
+		fi
+
+		run "gpio \"$state\" \"$gpionum\""
+		[ -n "$3" ] && info "Description: $3"
+	done < /etc/gpio.conf
+}
+
+case "$1" in
+	start)
+		starting
+		start
+		ok
+		;;
+	stop)
+		stopping
+		ok
+		;;
+	*)
+		die "Usage: $0 {start|stop}"
+		;;
+esac
+
+exit 0

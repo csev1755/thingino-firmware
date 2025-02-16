@@ -1,2 +1,0 @@
-#!/bin/sh
-fw_printenv -n $1
